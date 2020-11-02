@@ -44,6 +44,7 @@ import { getMaxdata } from './utils/getMaxdata';
 
 const { height, width } = Dimensions.get('screen');
 
+const statusBarHeight = Platform.OS === 'ios' ? DEVICE.isIphoneX ? 44 : 0 : StatusBar.currentHeight
 
 class VideoPlayer extends React.Component {
     static defaultProps = {
@@ -100,6 +101,15 @@ class VideoPlayer extends React.Component {
         this.animatedonBuffer = this.animatedonBuffer.bind(this)
     }
 
+    getstatusBarHeight = () => {
+
+        if (!this.isFull) {
+            return statusBarHeight
+        } else {
+            return 0
+        }
+    }
+
     componentWillUnmount() {
         Orientation.lockToPortrait();
         // Orientation.removeOrientationListener(this._orientationDidChange);
@@ -131,13 +141,15 @@ class VideoPlayer extends React.Component {
     changeAllBox = () => {
         this.setAll()
         Platform.OS === "android" && NativeModules.HideBottomNa.hide();
-        Orientation.lockToLandscape()
+        Orientation.lockToLandscapeLeft()
+        this.lockType = 1
         this.props.onWindowChange && this.props.onWindowChange("full")
     }
     //小屏
     changeSmallBox = () => {
         this.setSmall()
         Orientation.lockToPortrait()
+        this.lockType = 3
         this.props.onWindowChange && this.props.onWindowChange("small")
         Platform.OS === "android" && NativeModules.HideBottomNa.show();
     }
@@ -152,7 +164,7 @@ class VideoPlayer extends React.Component {
         this.props.navigation && this.props.navigation.setParams({ enableGestures: false });
         this.dotspeed && this.dotspeed.setdotStart(false)
         this.setState({
-            width: height + 0,//StatusBar.currentHeight
+            width: height - this.getstatusBarHeight(),//StatusBar.currentHeight
             height: width,
             statusBarH: 0,
             smallP: false,
@@ -865,7 +877,7 @@ class VideoPlayer extends React.Component {
         return (
             <>
                 {this.props.statusBar ? (smallP && this.props.statusBar()) : <Header width={this.state.width} />}
-                <View ref={ref => this.videoBox = ref} style={{ backgroundColor: "#000", position: 'relative' }}>
+                <View ref={ref => this.videoBox = ref} style={[{ backgroundColor: "#000", position: 'relative' }, this.lockType === 1 ? { paddingLeft: this.state.smallP ? 0 : this.getstatusBarHeight() } : null, this.lockType === 2 ? { paddingRight: this.state.smallP ? 0 : this.getstatusBarHeight() } : null]}>
 
                     <View style={{}}>
 
@@ -907,7 +919,7 @@ class VideoPlayer extends React.Component {
 
                         {this.state.showConts ?
                             <Animated.View
-                                style={{ position: "absolute", left: 0, right: 0, top: 0, opacity: this.state.opacity, height: 30 }}
+                                style={{ width: this.state.width,position: "absolute", left: 0, right: 0, top: 0, opacity: this.state.opacity, height: 30 }}
                             >
                                 {/* 阴影 */}
                                 <LinearGradient colors={['rgba(0,0,0,0.4)', 'rgba(0,0,0,0.1)', 'rgba(0,0,0,0)']} style={{ height: LinearGradientHeight, width: this.state.width }}></LinearGradient>
@@ -935,6 +947,36 @@ class VideoPlayer extends React.Component {
                                     >
                                         {this.props.moreSetting ? this.props.moreSetting() : <SvgVideoSetting height="20" width="20" />}
                                     </TouchableOpacity>
+
+                                    {this.state.smallP ? null :
+                                        <TouchableOpacity style={{ padding: 8 }}
+                                            onPress={() => {
+                                                if (this.lockType === 1) {
+                                                    Orientation.lockToLandscapeRight()
+                                                    this.lockType = 2
+                                                    this.forceUpdate()
+                                                } else if (this.lockType === 2) {
+                                                    Orientation.lockToLandscapeLeft()
+                                                    this.lockType = 1
+                                                    this.forceUpdate()
+                                                }
+                                            }}
+                                        >
+                                            <Text style={{ fontSize: 14, color: '#fff' }}>旋转</Text>
+
+                                        </TouchableOpacity>
+                                    }
+                                    {this.state.smallP ? null :
+                                        <TouchableOpacity style={{ padding: 8 }}
+                                            onPress={() => {
+                                                this.isFull = !this.isFull
+                                                this.setAll()
+                                            }}
+                                        >
+                                            <Text style={{ fontSize: 14, color: '#fff' }}>{this.isFull ? "适应" : "全屏"}</Text>
+
+                                        </TouchableOpacity>
+                                    }
                                 </View>
                             </Animated.View >
                             :
