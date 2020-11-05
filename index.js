@@ -41,6 +41,7 @@ import Video from 'react-native-video';
 import { formatSeconds } from './utils/formatSeconds';
 import Orientation from 'react-native-orientation-locker';
 import { getMaxdata } from './utils/getMaxdata';
+import Icon from 'react-native-vector-icons/Ionicons';
 
 const { height, width } = Dimensions.get('screen');
 
@@ -919,7 +920,7 @@ class VideoPlayer extends React.Component {
 
                         {this.state.showConts ?
                             <Animated.View
-                                style={{ width: this.state.width,position: "absolute", left: 0, right: 0, top: 0, opacity: this.state.opacity, height: 30 }}
+                                style={{ width: this.state.width, position: "absolute", left: 0, right: 0, top: 0, opacity: this.state.opacity, height: 30 }}
                             >
                                 {/* 阴影 */}
                                 <LinearGradient colors={['rgba(0,0,0,0.4)', 'rgba(0,0,0,0.1)', 'rgba(0,0,0,0)']} style={{ height: LinearGradientHeight, width: this.state.width }}></LinearGradient>
@@ -1052,7 +1053,11 @@ class VideoPlayer extends React.Component {
                                                 )
 
                                         }
-
+                                        <TouchableOpacity activeOpacity={1} style={{ bottom: 0, left: 0, paddingVertical: 10, zIndex: 999}} onPress={() => {
+                                            this.props.nextEpisode&&this.props.nextEpisode()
+                                        }}>
+                                            <Icon name={"play-skip-forward"} size={20} color='#fff' />
+                                        </TouchableOpacity>
                                         {/* 进度条 缓存条*/}
                                         <Speed
                                             {...this.state}
